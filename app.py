@@ -1,15 +1,10 @@
-# import streamlit as st
-
-# enable = st.checkbox("Enable camera")
-# picture = st.camera_input("Take a picture", disabled=not enable)
-
-# if picture:
-#     st.image(picture)
-
 import streamlit as st
 from PIL import Image
 import os
 import time
+import re
+import pandas as pd
+import matplotlib.pyplot as plt
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -65,10 +60,35 @@ if uploaded_file is not None:
   "get the text from the image",
   "Image: what is the text in the image",
 ])
+
   st.header("Detected text is below:")
   progress()
   st.write(response.text)
   extract_status=True
+
+  ingredient_pattern = r"([A-Za-z\s]+(?:\s[IP]+)?)\s*[\.\-]+\s*([0-9\.]+)%\s?w/v"
+
+  text =response.text
+  matches = re.findall(ingredient_pattern, text)
+  print(matches)
+
+  with st.container():
+    st.subheader("Detected ingredients:")
+    ingredients = [entry[0].strip() for entry in matches]
+    concentrations = [float(entry[1]) for entry in matches]
+
+# Display the data
+st.write("Ingredients and Concentrations:")
+st.table(matches)
+
+fig, ax = plt.subplots()
+# Bar chart
+ax.barh(ingredients, concentrations, color='#208FD4')
+# Labels and title
+ax.set_xlabel('Concentration (%)')
+ax.set_title('Concentration of Ingredients in the Medicine')
+
+st.pyplot(fig)
 
 
 if(extract_status==True):
@@ -95,11 +115,5 @@ if(extract_status==True):
   
 
 
-# need a main page explaining stuff
-# can we get a graph of the stuff in it to get the data
-# so yeah that is data analysis of the stuff made
-
-
-# ingredients/contains and such other synonyms and extract from there
-# and make a graph of those inputs
-# will need data to interact
+# need a main page explaining stuf
+#need to add other regex to make it more efficient
