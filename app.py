@@ -54,7 +54,9 @@ if option=='Local device':
 else:
     # progress()
     uploaded_file=st.camera_input("Take the picture",help="allow camera permissions")
-   
+
+
+extract_status=False
 
 if uploaded_file is not None:
   st.image(uploaded_file)
@@ -66,6 +68,38 @@ if uploaded_file is not None:
   st.header("Detected text is below:")
   progress()
   st.write(response.text)
+  extract_status=True
 
 
-st.text_input(label="enter to get more info on the medication info",help='enter text for further context')
+if(extract_status==True):
+  st.header("Chat and interact to get more insights")
+
+  if "messages" not in st.session_state:
+    st.session_state.messages=[]
+
+  for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+      st.markdown(message['content'])
+
+  if prompt := st.chat_input("ask here"):
+      st.session_state.messages.append({"role": "user", "content": prompt})
+      with st.chat_message("user"):
+          st.markdown(prompt)
+
+# Display assistant response in chat message container
+  if prompt is not None:
+    with st.chat_message("assistant"):
+      stream = model.generate_content(prompt)
+      response = st.write(stream.text)
+      st.session_state.messages.append({"role": "assistant", "content": response})
+  
+
+
+# need a main page explaining stuff
+# can we get a graph of the stuff in it to get the data
+# so yeah that is data analysis of the stuff made
+
+
+# ingredients/contains and such other synonyms and extract from there
+# and make a graph of those inputs
+# will need data to interact
