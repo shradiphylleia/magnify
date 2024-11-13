@@ -41,36 +41,71 @@ def plot_nutrient_composition(data):
 
     st.pyplot(fig)
 
+# def plot_nutrient_percentage(data):
+#     percent_nutrients = []
+#     percent_values = []
+
+#     for key,info in data.items():
+#         if key=='Other':
+#             for sub_key,sub_info in info.items():
+#                 unit=sub_info.get("unit","")
+#                 value=sub_info.get("value",0)
+#             if unit=="%":
+#                 percent_nutrients.append(sub_key)
+#                 percent_values.append(value)
+#         else:
+#             unit=info.get("unit","")
+#             value=info.get("value",0)
+#             if unit=="%":
+#                 percent_nutrients.append(sub_key)
+#                 percent_nutrients.append(value)
+
+#     if not percent_nutrients or not percent_values:
+#         st.write("No percentage-based nutrient data available to display.")
+#         return
+#     fig, ax = plt.subplots(figsize=(8, len(percent_nutrients) * 0.3))
+#     ax.barh(percent_nutrients, percent_values, color="#4CAF50")
+#     ax.set_xlabel("Percentage (%)")
+#     ax.set_title("Nutrient Composition by Percentage")
+
+#     # Display the plot in Streamlit
+#     st.pyplot(fig)
+#     st.pyplot(fig)
+
 def plot_nutrient_percentage(data):
     percent_nutrients = []
     percent_values = []
 
-    for key,info in data.items():
-        if key=='Other':
-            for sub_key,sub_info in info.items():
-                unit=sub_info.get("unit","")
-                value=sub_info.get("value",0)
-            if unit=="%":
-                percent_nutrients.append(sub_key)
-                percent_values.append(value)
+    # Extract only percentage values from the data
+    for key, info in data.items():
+        if key == 'Other':  # Handle nested items in "Other"
+            for sub_key, sub_info in info.items():
+                unit = sub_info.get("unit", "")
+                value = sub_info.get("value", 0)
+                if unit == "%":
+                    percent_nutrients.append(sub_key)
+                    percent_values.append(value)
         else:
-            unit=info.get("unit","")
-            value=info.get("value",0)
-            if unit=="%":
-                percent_nutrients.append(sub_key)
-                percent_nutrients.append(value)
+            unit = info.get("unit", "")
+            value = info.get("value", 0)
+            if unit == "%":
+                percent_nutrients.append(key)
+                percent_values.append(value)
 
+    # Ensure data is present
     if not percent_nutrients or not percent_values:
         st.write("No percentage-based nutrient data available to display.")
         return
-    fig, ax = plt.subplots(figsize=(8, len(percent_nutrients) * 0.3))
+
+    # Plot as a horizontal bar chart
+    fig, ax = plt.subplots(figsize=(8, len(percent_nutrients) * 0.5))
     ax.barh(percent_nutrients, percent_values, color="#4CAF50")
     ax.set_xlabel("Percentage (%)")
     ax.set_title("Nutrient Composition by Percentage")
 
     # Display the plot in Streamlit
     st.pyplot(fig)
-    st.pyplot(fig)
+
 
 
     # slider to filter nutirent percentage

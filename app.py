@@ -14,15 +14,15 @@ GOOGLE_API_KEY= os.getenv('GOOGLE_API_KEY')
 
 genai.configure(api_key=GOOGLE_API_KEY)
 
-def progress(x):
-  progress_text = "Operation in progress. Please wait."
-  my_bar = st.progress(0, text=progress_text)
+# def progress(x):
+#   progress_text = "Operation in progress. Please wait."
+#   my_bar = st.progress(0, text=progress_text)
 
-  for percent_complete in range(x):
-      time.sleep(0.01)
-      my_bar.progress(percent_complete + 1, text=progress_text)
+#   for percent_complete in range(x):
+#       time.sleep(0.01)
+#       my_bar.progress(percent_complete + 1, text=progress_text)
   
-  my_bar.empty()
+#   my_bar.empty()
 
 generation_config = {
   "temperature": 0.9,
@@ -53,7 +53,7 @@ else:
 matches=[]
 
 with st.container():
-  progress(100)
+  # progress(100)
   if uploaded_file is not None:
     st.image(uploaded_file)
     response = model.generate_content([
@@ -124,7 +124,7 @@ if uploaded_file:
 
 with st.container():
   #  slider for age and to see RDA values and making stacked bar
-    st.slider(min_value=0,max_value=100,label='Age')
+    age=st.select_slider(label='Select the category which fits you best',options=["Infants(0-6m)","Infants(7-12m)","Children(1-3Y)","18+","Pregnant","Lactation(0-6m)","Lactation(7-12)m"],value="18+")
 
 
 
