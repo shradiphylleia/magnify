@@ -130,24 +130,21 @@ if uploaded_file:
 
 
 response=""
+st.header("Chat and interact to get more insights")
 
-if(extract_status==True):
-  st.header("Chat and interact to get more insights")
-
-  if "messages" not in st.session_state:
+if "messages" not in st.session_state:
     st.session_state.messages=[]
-
-  for message in st.session_state.messages:
+for message in st.session_state.messages:
     with st.chat_message(message["role"]):
       st.markdown(message['content'])
 
-  if prompt := st.chat_input("ask here"):
+if prompt := st.chat_input("ask here"):
       st.session_state.messages.append({"role": "user", "content": prompt})
       with st.chat_message("user"):
           st.markdown(prompt)
 
 # Display assistant response in chat message container
-  if prompt is not None:
+if prompt is not None:
     with st.chat_message("assistant"):
       stream = model.generate_content(prompt)
       response = st.write(stream.text)
