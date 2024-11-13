@@ -5,6 +5,7 @@ import time
 import re
 import pandas as pd
 from vizualization import plot_nutrient_composition, plot_nutrient_percentage
+from report_download import generate_report
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -14,15 +15,6 @@ GOOGLE_API_KEY= os.getenv('GOOGLE_API_KEY')
 
 genai.configure(api_key=GOOGLE_API_KEY)
 
-# def progress(x):
-#   progress_text = "Operation in progress. Please wait."
-#   my_bar = st.progress(0, text=progress_text)
-
-#   for percent_complete in range(x):
-#       time.sleep(0.01)
-#       my_bar.progress(percent_complete + 1, text=progress_text)
-  
-#   my_bar.empty()
 
 generation_config = {
   "temperature": 0.9,
@@ -40,20 +32,21 @@ model = genai.GenerativeModel(
 st.title("magnify")
 st.subheader("understanding food and nutrition")
 
+with st.container():
+  #  slider for age 
+    age=st.select_slider(label='Select the category which fits you best',options=["Infants(0-6m)","Infants(7-12m)","Children(1-3Y)","18+","Pregnant","Lactation(0-6m)","Lactation(7-12)m"],value="18+")
+
 #image uploading
 option=st.radio("How would you like to upload the image?",["Local device","Capture now"])
 
 if option=='Local device':
-    # progress()
     uploaded_file = st.file_uploader("Upload from your device",type=['jpg','png'],help='Upload')
 else:
-    # progress()
     uploaded_file=st.camera_input("Take the picture",help="allow camera permissions")
 
 matches=[]
 
 with st.container():
-  # progress(100)
   if uploaded_file is not None:
     st.image(uploaded_file)
     response = model.generate_content([
@@ -122,9 +115,8 @@ if uploaded_file:
      plot_nutrient_percentage(data)
   
 
-with st.container():
-  #  slider for age and to see RDA values and making stacked bar
-    age=st.select_slider(label='Select the category which fits you best',options=["Infants(0-6m)","Infants(7-12m)","Children(1-3Y)","18+","Pregnant","Lactation(0-6m)","Lactation(7-12)m"],value="18+")
+  with st.container():
+     generate_report(data)
 
 
 
