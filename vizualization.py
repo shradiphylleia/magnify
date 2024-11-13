@@ -72,8 +72,3 @@ def plot_nutrient_percentage(data):
 
     st.pyplot(fig)
 
-
-
-    # slider to filter nutirent percentage
-    # added details on hover with altair
-    # comparison with rda

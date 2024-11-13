@@ -6,6 +6,8 @@ import re
 import pandas as pd
 from vizualization import plot_nutrient_composition, plot_nutrient_percentage
 from report_download import generate_report
+from threshold import load_rda_data, check_thresholds
+
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -14,7 +16,8 @@ import google.generativeai as genai
 GOOGLE_API_KEY= os.getenv('GOOGLE_API_KEY')
 
 genai.configure(api_key=GOOGLE_API_KEY)
-
+rda_file = "data\RDA.xlsx"
+rda_data = load_rda_data(rda_file)
 
 generation_config = {
   "temperature": 0.9,
@@ -32,9 +35,6 @@ model = genai.GenerativeModel(
 st.title("magnify")
 st.subheader("understanding food and nutrition")
 
-with st.container():
-  #  slider for age 
-    age=st.select_slider(label='Select the category which fits you best',options=["Infants(0-6m)","Infants(7-12m)","Children(1-3Y)","18+","Pregnant","Lactation(0-6m)","Lactation(7-12)m"],value="18+")
 
 #image uploading
 option=st.radio("How would you like to upload the image?",["Local device","Capture now"])
@@ -114,11 +114,23 @@ if uploaded_file:
   with st.container():
      plot_nutrient_percentage(data)
   
-
   with st.container():
      generate_report(data)
 
+  with st.container():
+  #  slider for age 
+    age=st.select_slider(label='Select the category which fits you best',options=["Infants(0-6m)","Infants(7-12m)","Children(1-3Y)","18+","Pregnant","Lactation(0-6m)","Lactation(7-12)m"],value="18+")
+    rda_age = rda_data[rda_data['Age'] == age].squeeze() 
+  
 
+  with st.container():
+      st.header("Threshold Analysis")
+      if not rda_age.empty:
+          threshold_results = check_thresholds(data, rda_age, target_keywords.keys())
+          for nutrient, status in threshold_results.items():
+              st.write(f"{nutrient}: {status}")
+      else:
+          st.write("No RDA data available for the selected age group.")
 
 
 
