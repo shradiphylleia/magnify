@@ -129,7 +129,6 @@ if uploaded_file:
 
 
 
-extract_status=False
 response=""
 
 if(extract_status==True):
