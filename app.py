@@ -4,21 +4,21 @@ import os
 import time
 import re
 import pandas as pd
-import matplotlib.pyplot as plt
+from vizualization import plot_nutrient_composition, plot_nutrient_percentage
+
 from dotenv import load_dotenv
 load_dotenv()
 
- 
 import google.generativeai as genai
 GOOGLE_API_KEY= os.getenv('GOOGLE_API_KEY')
 
 genai.configure(api_key=GOOGLE_API_KEY)
 
-def progress():
+def progress(x):
   progress_text = "Operation in progress. Please wait."
   my_bar = st.progress(0, text=progress_text)
 
-  for percent_complete in range(100):
+  for percent_complete in range(x):
       time.sleep(0.01)
       my_bar.progress(percent_complete + 1, text=progress_text)
   
@@ -38,7 +38,7 @@ model = genai.GenerativeModel(
 )
 
 st.title("magnify")
-st.subheader("understanding medical labels")
+st.subheader("understanding food and nutrition")
 
 #image uploading
 option=st.radio("How would you like to upload the image?",["Local device","Capture now"])
@@ -50,46 +50,89 @@ else:
     # progress()
     uploaded_file=st.camera_input("Take the picture",help="allow camera permissions")
 
+matches=[]
 
-extract_status=False
+with st.container():
+  progress(100)
+  if uploaded_file is not None:
+    st.image(uploaded_file)
+    response = model.generate_content([
+    Image.open(uploaded_file),
+    "get the text from the image",
+    "Image: what is the text in the image",
+  ])
+    st.header("Detected text is below:")
+    st.write(response.text)
+    extract_status=True
+    pattern = r"([A-Za-z\s]+(?:[B][0-9]|C|D)?)\s*[-:]\s*([<]?[0-9\.]+)\s*([a-zA-Z/%]*)"
+    matches = re.findall(pattern, response.text)
 
-if uploaded_file is not None:
-  st.image(uploaded_file)
-  response = model.generate_content([
-  Image.open(uploaded_file),
-  "get the text from the image",
-  "Image: what is the text in the image",
-])
+  
+  else:
+    st.write('We were not able to detect a file at the moment.Drag or capture file to get started')
 
-  st.header("Detected text is below:")
-  progress()
-  st.write(response.text)
-  extract_status=True
 
-  ingredient_pattern = r"([A-Za-z\s]+(?:\s[IP]+)?)\s*[\.\-]+\s*([0-9\.]+)%\s?w/v"
+target_keywords = {
+    "Protein (PE ratio)": "Protein",
+    "Calcium (mg/d)": "Calcium",
+    "Magnesium (mg/d)": "Magnesium",
+    "Iron (mg/d)": "Iron",
+    "Zinc (mg/d)": "Zinc",
+    "Iodine (µg/d)": "Iodine",
+    "Niacin (mg/d)": "Niacin",
+    "Vitamin B6 (mg/d)": "Vitamin B6",
+    "Folate (µg/d)": "Folate",
+    "Vitamin C (mg/d)": "Vitamin C",
+    "Vitamin A (µg/d)": "Vitamin A",
+    "Vitamin D (IU/d)": "Vitamin D"
+}
 
-  text =response.text
-  matches = re.findall(ingredient_pattern, text)
-  print(matches)
+data = {category: {} for category in target_keywords.keys()}
+data["Other"] = {}
+
+if uploaded_file:
+  for match in matches:
+      name, value, unit = match
+      name = name.strip()
+
+      try:
+          value = float(value.replace("<", ""))
+      except ValueError:
+          pass
+
+      found = False
+      for category, keyword in target_keywords.items():
+          if keyword in name:
+              data[category] = {"value": value, "unit": unit}
+              found = True
+              break
+
+      if not found:
+          data["Other"][name] = {"value": value, "unit": unit}
+
 
   with st.container():
-    st.subheader("Detected ingredients:")
-    ingredients = [entry[0].strip() for entry in matches]
-    concentrations = [float(entry[1]) for entry in matches]
+    st.header("Detected the given nutritional values")
+    st.write(data)
 
-# Display the data
-st.write("Ingredients and Concentrations:")
-st.table(matches)
+  with st.container():
+    plot_nutrient_composition(data)
 
-fig, ax = plt.subplots()
-# Bar chart
-ax.barh(ingredients, concentrations, color='#208FD4')
-# Labels and title
-ax.set_xlabel('Concentration (%)')
-ax.set_title('Concentration of Ingredients in the Medicine')
+  with st.container():
+     plot_nutrient_percentage(data)
+  
 
-st.pyplot(fig)
+with st.container():
+  #  slider for age and to see RDA values and making stacked bar
+    st.slider(min_value=0,max_value=100,label='Age')
 
+
+
+
+
+
+extract_status=False
+response=""
 
 if(extract_status==True):
   st.header("Chat and interact to get more insights")
@@ -113,7 +156,3 @@ if(extract_status==True):
       response = st.write(stream.text)
       st.session_state.messages.append({"role": "assistant", "content": response})
   
-
-
-# need a main page explaining stuf
-#need to add other regex to make it more efficient
